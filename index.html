@@ -1,0 +1,151 @@
+<html>
+    <head>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mapwize@4.0.1/mapwize.js"></script>
+        <style>
+            #mapwize {
+                position:absolute; top:0; bottom:0; width:81%; height: 100%;
+                float: left;
+            }
+            #rightmenu {
+                position:absolute; top:0; right:14;
+                height: 100%;
+                width: 18%;
+                float: right;
+            }
+            .my-custom-marker {
+                background-color: brown;
+                font-size: larger;
+                color: white;
+                padding: 8px;
+                font-weight: bolder;
+            }
+
+            .btn-print {
+                width: 90%;
+                border-radius: 4rem !important;
+                background-color: #793eff !important;
+                border-color: #793eff !important;
+            }
+        </style>
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+        <script type="text/javascript">
+            function print_div(){
+                var mywindow = window.open('', 'PRINT', 'height=600,width=800');
+
+                mywindow.document.write('<html><head><title>' + document.title  + '</title>');
+                mywindow.document.write('</head><body >');
+                mywindow.document.write('<h1>' + document.title  + '</h1>');
+                mywindow.document.write($("#mapwize").html());
+                mywindow.document.write('</body></html>');
+
+                mywindow.document.close(); // necessary for IE >= 10
+                mywindow.focus(); // necessary for IE >= 10*/
+
+                mywindow.print();
+                mywindow.close();
+            }
+        </script>
+    </head>
+    <body>
+        
+        <div id="mapwize"></div>
+        <div id="rightmenu" style="display: inline-table">
+            <div class="row h-100">
+                <div class="col-sm-12 text-center" style="margin-top: auto; margin-bottom: auto; padding-left: 30px;">
+                    <div class="font-weight-bold">
+                        <img src="./logo.png" alt="FesPIM">    
+                    </div>
+                    
+                    <div style="padding-top: 30px;">
+                        <button type="button" 
+                        onclick="print_div();"
+                        class="btn btn-primary btn-round-xs btn-xs btn-print">IMPRIMIR</button>
+                    </div>
+                </div>
+             </div>
+        </div>
+        <script>
+            this.places_to_visit = [];
+            thiz = this;
+
+            Mapwize.apiKey('552223ac328f6a89b6b5ff1e3663c0c7')
+            Mapwize.map({
+                container: 'mapwize',
+                maxBounds: [ [-35.175133, -5.874500], [
+                -35.166147, -5.863587] ],
+                center: [-35.170694, -5.870505],
+	            minZoom:  11
+            }).then(map => {
+                // map.centerOnVenue('5ddd4db73b768a00169c81c9');
+                thiz.map = map;
+                map.centerOnPlace('5ddd547453595f002d9b9b73', {zoom:18});
+
+                map.on('mapwize:click', e => {
+                    if (e.place != null) {
+                        console.log(e.place._id)
+                        id = e.place._id;
+                        if (id==='5ddd50d653595f002d9b9ad0') return;
+                        
+                        not_there = (thiz.places_to_visit.filter(v => v.placeId===id).length === 0);
+                        map.removeMarkers();
+                        if(not_there) {
+                            thiz.places_to_visit.push({placeId: id})
+                        } else {
+                            thiz.places_to_visit = thiz.places_to_visit.filter(v => v.placeId!==id);
+                        }
+                        //thiz.places_to_visit.push({placeId: id})
+
+                        Mapwize.Api.getDirection({
+                            from: {placeId: '5ddd50d653595f002d9b9ad0'},
+                            to: {placeId: '5ddd50d653595f002d9b9ad0'},
+                            waypoints:thiz.places_to_visit,
+                            options: {waypointOptimize: true}
+
+                        }).then(direction => {
+                            map.setDirection(direction); 
+                            console.log(direction)
+                            direction.waypoints.forEach((element, idx) => {
+                                el = document.createElement('div');
+                                el.innerHTML += ''+(idx+1);
+                                el.className = 'marker my-custom-marker';
+                                el.addEventListener('click', () => {
+                                    console.log('marker', el, ' clicked.')
+                                });
+
+                                myCustomMarker = new Mapwize.Marker(el);
+
+                                map.addMarker(element, myCustomMarker).then(marker => {
+                                    // Marker as been added on map
+                                    
+                                }).catch(err => {
+                                    return  console.error('addMarker failed', err);
+                                });
+                            });
+
+                            divs_to_remove = document.getElementsByClassName('mwzDirectionChangeFloorIcon')
+                            divs_to_remove.forEach(el => {
+                                while ( el.firstChild ) { 
+                                    el.removeChild( el.firstChild );
+                                }
+                            });
+                        });
+                    }
+                });
+
+            }).catch(err => {
+                console.error(err);
+            });
+
+            
+            
+
+        </script>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>
