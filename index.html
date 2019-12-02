@@ -42,8 +42,21 @@
     <body>
         <div class="container-fluid">
           <div class="row h-100" >
-            <div id="mapwize" class="col-12"></div>
-            
+            <div id="mapwize" class="col-9"></div>
+            <div id="rightmenu" class="col-3">
+                <div class="row h-100">
+                    <div class="col-sm-12 text-center" style="margin-top: auto; margin-bottom: auto;">
+                        <div class="font-weight-bold">
+                            <img src="https://www.dropbox.com/s/zid8fbkg9z0k0z8/logo.png?dl=1" alt="FesPIM">    
+                        </div>
+                        
+                        <div style="padding-top: 30px;">
+                            <img src="./qr_img.png" alt="https://tinyurl.com/fespim">
+                            <small>https://tinyurl.com/fespim</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
           </div>
         </div>  
         <script>
@@ -92,7 +105,9 @@
 
                         }).then(direction => {
                             map.setDirection(direction, {centerOnStart: false});
-                            // console.log(direction.distance)
+                            map.setPaintProperty('mapwize_layer_direction_line', 'line-dasharray' , [10,10])
+
+                            console.log(direction)
                             direction.waypoints.forEach((element, idx) => {
                                 el = document.createElement('div');
                                 el.innerHTML += ''+(idx+1);
