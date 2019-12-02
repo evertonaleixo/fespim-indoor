@@ -62,14 +62,15 @@
         <script>
             this.places_to_visit = [];
             thiz = this;
+            thiz.click = 0
 
             Mapwize.apiKey('552223ac328f6a89b6b5ff1e3663c0c7')
             Mapwize.map({
                 container: 'mapwize',
+                mainColor: '#69b900',
                 maxBounds: [ [-35.175133, -5.874500], [
                 -35.166147, -5.863587] ],
                 center: [-35.170694, -5.870505],
-                mainColor: '#69b900',
 	            minZoom:  11,
             }).then(map => {
                 // map.centerOnVenue('5ddd4db73b768a00169c81c9');
@@ -84,6 +85,7 @@
                         
                         not_there = (thiz.places_to_visit.filter(v => v.placeId===id).length === 0);
                         map.removeMarkers();
+
                         new_color = '#8b72a2';
                         if(not_there) {
                             thiz.places_to_visit.push({placeId: id});
@@ -104,10 +106,40 @@
                             options: {waypointOptimize: true}
 
                         }).then(direction => {
-                            map.setDirection(direction, {centerOnStart: false});
+                            // map.setDirection(direction, {centerOnStart: false});
                             map.setPaintProperty('mapwize_layer_direction_line', 'line-dasharray' , [10,10])
 
-                            console.log(direction)
+                            thiz.direction = direction;
+                            map.removeLayer('lines'+thiz.click);
+                            thiz.click = thiz.click + 1;
+                            features = direction.route.map(coords => ({
+                                'type':'Feature', 
+                                'properties': {'color': '#69b900'}, 
+                                'geometry': {'type':'LineString', 'coordinates': coords.path.map(path => [path[1], path[0]])} 
+                                })
+                            );
+                            features[features.length-1].properties.color = '#F7455D'
+
+                            layer_ = {
+                                'id': 'lines'+thiz.click,
+                                'type': 'line',
+                                 'source': {
+                                    'type': 'geojson',
+                                    'data': {
+                                        'type': 'FeatureCollection',
+                                        'features': features
+                                    }
+                                },
+                                'paint': {
+                                    'line-width': 5,
+                                    "line-opacity": 0.5,
+                                    'line-dasharray': [10, 5],
+                                    'line-color': ['get', 'color']
+                                }
+                            }
+                            thiz.layer_ = layer_
+                            map.addLayer(layer_);
+
                             direction.waypoints.forEach((element, idx) => {
                                 el = document.createElement('div');
                                 el.innerHTML += ''+(idx+1);
